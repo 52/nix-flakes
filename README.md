@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)][License-Apache]
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)][License-MIT]
 
-A collection of <a href="https://nixos.wiki/wiki/Flakes/">nix-flakes</a> based development environments.
+A collection of <a href="https://nixos.wiki/wiki/Flakes/">nix</a> development environments.
 
 ## License
 
