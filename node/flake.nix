@@ -15,29 +15,35 @@
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        inherit (nixpkgs) lib;
-
-        # packages
         pkgs = import nixpkgs {
           inherit system;
         };
+
+        ## Node.js LTS version.
+        ##
+        #@ Package
+        node = pkgs.nodejs_22;
+
+        ## TypeScript compiler and language server.
+        ##
+        #@ [Package]
+        typescript = with pkgs; [
+          typescript
+          typescript-language-server
+        ];
       in
       {
         devShell = pkgs.mkShell {
-          buildInputs = lib.concatLists [
-            (with pkgs; [
-              nodejs_22
-              typescript
-              typescript-language-server
-            ])
-          ];
           shellHook = ''
+            echo "Entering the 'github:52/nix-flakes#node' development environment"
             echo ""
-            echo "Using node versions:"
-            echo "$(${pkgs.nodejs_22}/bin/node --version)"
-            echo "$(${pkgs.nodejs_22}/bin/npm --version)"
+            echo "node:       $(${node}/bin/node --version)"
+            echo "npm:        $(${node}/bin/npm --version)" 
+            echo "typescript: $(${pkgs.typescript}/bin/tsc --version)"
             echo ""
           '';
+
+          buildInputs = [ node ] ++ typescript;
         };
       }
     );
