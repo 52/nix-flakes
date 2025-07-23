@@ -17,79 +17,109 @@
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        inherit (builtins) pathExists;
         inherit (nixpkgs) lib;
 
-        # overlays
-        overlays = [
-          (import rust-overlay)
-        ];
-
-        # packages
         pkgs = import nixpkgs {
-          inherit system overlays;
+          inherit system;
+          overlays = [ (import rust-overlay) ];
         };
 
-        # rust-overlay
+        ## Rust binaries from the rust-overlay.
+        ##
+        #@ AttrSet
         rust = pkgs.rust-bin;
 
-        # rust toolchain file
-        pwd = builtins.getEnv "PWD";
-        file = lib.findFirst pathExists null [
-          "${pwd}/rust-toolchain.toml"
-          "${pwd}/rust-toolchain"
+        ## Finds a toolchain file in the current directory.
+        ##
+        #@ Path | null
+        findToolchainFile = lib.findFirst builtins.pathExists null [
+          "${builtins.getEnv "PWD"}/rust-toolchain.toml"
+          "${builtins.getEnv "PWD"}/rust-toolchain"
         ];
 
-        # rust extensions
-        extensions = [
+        ## Extensions to include in all toolchains.
+        ##
+        #@ [String]
+        defaultExtensions = [
           "rust-analyzer"
           "rust-src"
           "clippy"
         ];
 
-        # rust toolchain
-        base = if file != null then rust.fromRustupToolchainFile file else rust.stable.latest.minimal;
-        channel = base.override {
-          extensions = lib.unique (extensions ++ (base.extensions or [ ]));
+        ## Build a toolchain configuration from a file.
+        ##
+        ## ```nix
+        ## mkToolchain {
+        ##   file = ./rust-toolchain.toml;
+        ##   extensions = [ "rust-src" ];
+        ## }
+        ## ```
+        ##
+        #@ AttrSet -> Derivation
+        mkToolchain =
+          {
+            ## Path to the toolchain file.
+            ##
+            #@ Path | null
+            file,
+
+            ## Additional extensions to include.
+            ##
+            #@ [String]
+            extensions ? [ ],
+          }:
+          let
+            ## Base toolchain configuration, uses stable as fallback.
+            ##
+            #@ Derivation
+            base = if file != null then rust.fromRustupToolchainFile file else rust.stable.latest.minimal;
+
+            ## Merged list of all required extensions.
+            ##
+            #@ [String]
+            mergedExtensions = lib.unique (defaultExtensions ++ extensions ++ (base.extensions or [ ]));
+          in
+          base.override { extensions = mergedExtensions; };
+
+        ## Toolchain derivation built from the configuration file.
+        ##
+        #@ Derivation
+        toolchain = mkToolchain {
+          file = findToolchainFile;
+          extensions = [ ];
         };
 
-        # nightly components
-        nightly = rust.selectLatestNightlyWith (toolchain: toolchain.rustfmt);
+        ## Additional cargo extensions to include.
+        ##
+        #@ [Package]
+        cargo = with pkgs; [
+          cargo-flamegraph
+          cargo-criterion
+          cargo-show-asm
+          cargo-nextest
+          cargo-expand
+          cargo-hack
+          cargo-fuzz
+        ];
       in
       {
         devShell = pkgs.mkShell {
-          buildInputs = lib.concatLists [
-            [
-              nightly
-              channel
-            ]
-
-            (with pkgs; [
-              cargo-flamegraph
-              cargo-criterion
-              cargo-show-asm
-              cargo-nextest
-              cargo-expand
-              cargo-watch
-              cargo-hack
-              cargo-fuzz
-            ])
-          ];
           shellHook = ''
-            # ensure `cargo fmt` uses nightly `rustfmt`
-            export RUSTFMT="${nightly}/bin/rustfmt"
-
+            echo "Entering the 'github:52/nix-flakes#rust development environment'"
             echo ""
-            ${lib.optionalString (file != null) ''echo "Using file \"${toString file}\":"''}
-            ${lib.optionalString (file == null) ''echo "Using latest stable:"''}
-            echo "$(${channel}/bin/rustc --version)"
-            echo "$(${channel}/bin/cargo --version)"
-            echo "$(${channel}/bin/rust-analyzer --version)"
-            echo ""
-            echo "Using latest nightly:"
-            echo "$($RUSTFMT --version)"
+            echo "rustc:         $(${toolchain}/bin/rustc --version)"
+            echo "cargo:         $(${toolchain}/bin/cargo --version)"
+            echo "rust-analyzer: $(${toolchain}/bin/rust-analyzer --version)"
             echo ""
           '';
+
+          buildInputs = [
+            toolchain
+          ]
+          ++ lib.optional (
+            !builtins.elem "rustfmt" (toolchain.extensions or [ ])
+          ) rust.selectLatestNightlyWith (t: t.rustfmt)
+          ++ cargo;
         };
       }
     );
