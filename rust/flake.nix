@@ -106,19 +106,17 @@
         devShell = pkgs.mkShell {
           shellHook = ''
             echo "Entering the 'github:52/nix-flakes#rust development environment'"
-            echo ""
             echo "rustc:         $(${toolchain}/bin/rustc --version)"
             echo "cargo:         $(${toolchain}/bin/cargo --version)"
             echo "rust-analyzer: $(${toolchain}/bin/rust-analyzer --version)"
-            echo ""
           '';
 
           buildInputs = [
             toolchain
           ]
-          ++ lib.optional (
-            !builtins.elem "rustfmt" (toolchain.extensions or [ ])
-          ) rust.selectLatestNightlyWith (t: t.rustfmt)
+          ++ lib.optional (!builtins.elem "rustfmt" (toolchain.extensions or [ ])) (
+            rust.selectLatestNightlyWith (toolchain: toolchain.rustfmt)
+          )
           ++ cargo;
         };
       }

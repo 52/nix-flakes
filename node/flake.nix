@@ -27,7 +27,7 @@
         ## TypeScript compiler and language server.
         ##
         #@ [Package]
-        typescript = with pkgs; [
+        ts = with pkgs; [
           typescript
           typescript-language-server
         ];
@@ -36,14 +36,12 @@
         devShell = pkgs.mkShell {
           shellHook = ''
             echo "Entering the 'github:52/nix-flakes#node' development environment"
-            echo ""
             echo "node:       $(${node}/bin/node --version)"
             echo "npm:        $(${node}/bin/npm --version)" 
             echo "typescript: $(${pkgs.typescript}/bin/tsc --version)"
-            echo ""
           '';
 
-          buildInputs = [ node ] ++ typescript;
+          buildInputs = [ node ] ++ ts;
         };
       }
     );

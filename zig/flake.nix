@@ -38,10 +38,8 @@
         devShell = pkgs.mkShell {
           shellHook = ''
             echo "Entering the 'github:52/nix-flakes#zig' development environment"
-            echo ""
-            echo "zig:  $(${zig}/bin/zig version)"
-            echo "zls:  $(${zls}/bin/zls --version)"
-            echo ""
+            echo "zig: $(${zig}/bin/zig version)"
+            echo "zls: $(${zls}/bin/zls --version)"
           '';
 
           buildInputs = [
