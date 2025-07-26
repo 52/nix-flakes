@@ -41,7 +41,7 @@
             echo "typescript: $(${pkgs.typescript}/bin/tsc --version)"
           '';
 
-          buildInputs = [ node ] ++ ts;
+          packages = [ node ] ++ ts;
         };
       }
     );

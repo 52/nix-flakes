@@ -111,7 +111,7 @@
             echo "rust-analyzer: $(${toolchain}/bin/rust-analyzer --version)"
           '';
 
-          buildInputs = [
+          packages = [
             toolchain
           ]
           ++ lib.optional (!builtins.elem "rustfmt" (toolchain.extensions or [ ])) (

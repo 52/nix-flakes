@@ -42,7 +42,7 @@
             echo "zls: $(${zls}/bin/zls --version)"
           '';
 
-          buildInputs = [
+          packages = [
             zig
             zls
             lldb
