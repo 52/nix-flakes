@@ -20,7 +20,8 @@
         };
       in
       {
-        # Shell used by 'nix develop', see: https://nix.dev/manual/nix/2.17/command-ref/new-cli/nix3-develop
+        # Shell used by "nix develop".
+        # See: https://nix.dev/manual/nix/2.18/command-ref/new-cli/nix3-develop
         devShell = pkgs.mkShell {
           buildInputs = builtins.attrValues {
             inherit (pkgs)
