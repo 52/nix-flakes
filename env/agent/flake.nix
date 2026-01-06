@@ -48,8 +48,8 @@
           default = "opencode";
           variants = agents;
           packages = extraPackages;
-          shellHook = agent: ''
-            echo "Agent: ${agent}"
+          shellHook = version: ''
+            export NIX_FLAKE_NAME="agent:${version}"
           '';
         };
       }

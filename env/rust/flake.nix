@@ -80,6 +80,7 @@
           variants = lib.mapAttrs (_: withExtensions) toolchains;
           packages = [ (rust.selectLatestNightlyWith (toolchain: toolchain.rustfmt)) ] ++ extraPackages;
           shellHook = version: ''
+            export NIX_FLAKE_NAME="rust:${version}"
             echo "rustc:         $(rustc --version)"
             echo "cargo:         $(cargo --version)"
             echo "rust-analyzer: $(rust-analyzer --version)"

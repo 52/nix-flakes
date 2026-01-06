@@ -53,6 +53,7 @@
           variants = runtimes;
           packages = extraPackages;
           shellHook = version: ''
+            export NIX_FLAKE_NAME="node:${version}"
             echo "node: $(node --version)"
             echo "npm:  $(npm --version)"
             echo "tsc:  $(tsc --version)"
