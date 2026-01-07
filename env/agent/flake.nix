@@ -36,7 +36,9 @@
         ## Additional packages to install.
         ##
         #@ [Package]
-        extraPackages = with pkgs; [ ];
+        extraPackages = with pkgs; [
+          firejail
+        ];
 
         ## Package for each agent.
         ##
