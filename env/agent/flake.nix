@@ -31,6 +31,7 @@
         #@ [String]
         defaultAgents = [
           "opencode"
+          "claude-code"
         ];
 
         ## Additional packages to install.
