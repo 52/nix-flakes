@@ -57,11 +57,11 @@
             export NIX_FLAKE_NAME="python:${version}"
             export UV_PYTHON="${runtimes.${version}}/bin/python"
             export UV_PYTHON_DOWNLOADS="never"
-
-            echo "python:  $(python --version)"
-            echo "uv:      $(uv --version)"
-            echo "ruff:    $(ruff --version)"
-            echo "ty:     $(ty --version)"
+            PKGS=(python uv ty ruff)
+            echo "Environment:"
+            for pkg in "''${PKGS[@]}"; do
+              printf "  %-12s →  %s\n" "$pkg" "$($pkg --version)"
+            done
           '';
         };
       }

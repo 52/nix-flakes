@@ -81,10 +81,11 @@
           packages = [ (rust.selectLatestNightlyWith (toolchain: toolchain.rustfmt)) ] ++ extraPackages;
           shellHook = version: ''
             export NIX_FLAKE_NAME="rust:${version}"
-            echo "rustc:         $(rustc --version)"
-            echo "cargo:         $(cargo --version)"
-            echo "rust-analyzer: $(rust-analyzer --version)"
-            echo "rustfmt:       $(rustfmt --version)"
+            PKGS=(rustc cargo rust-analyzer rustfmt)
+            echo "Environment:"
+            for pkg in "''${PKGS[@]}"; do
+              printf "  %-12s →  %s\n" "$pkg" "$($pkg --version)"
+            done
           '';
         };
       }

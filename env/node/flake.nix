@@ -54,9 +54,11 @@
           packages = extraPackages;
           shellHook = version: ''
             export NIX_FLAKE_NAME="node:${version}"
-            echo "node: $(node --version)"
-            echo "npm:  $(npm --version)"
-            echo "tsc:  $(tsc --version)"
+            PKGS=(node npm tsc)
+            echo "Environment:"
+            for pkg in "''${PKGS[@]}"; do
+              printf "  %-12s →  %s\n" "$pkg" "$($pkg --version)"
+            done
           '';
         };
       }
