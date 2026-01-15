@@ -43,6 +43,15 @@
           uv
         ];
 
+        ## Common libraries needed by python.
+        ##
+        #@ [Package]
+        libs = with pkgs; [
+          stdenv.cc.cc.lib
+          glib
+          zlib
+        ];
+
         ## Python package for each version.
         ##
         #@ AttrSet
@@ -55,8 +64,14 @@
           packages = extraPackages;
           shellHook = version: ''
             export NIX_FLAKE_NAME="python:${version}"
+
+            ${lib.optionalString pkgs.stdenv.isLinux ''
+              export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath libs}:$LD_LIBRARY_PATH"
+            ''}
+
             export UV_PYTHON="${runtimes.${version}}/bin/python"
             export UV_PYTHON_DOWNLOADS="never"
+
             PKGS=(python uv ty ruff)
             echo "Environment:"
             for pkg in "''${PKGS[@]}"; do
