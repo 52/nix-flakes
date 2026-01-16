@@ -80,7 +80,9 @@
           variants = lib.mapAttrs (_: withExtensions) toolchains;
           packages = [ (rust.selectLatestNightlyWith (toolchain: toolchain.rustfmt)) ] ++ extraPackages;
           shellHook = version: ''
+            export SHELL="${pkgs.bashInteractive}/bin/bash"
             export NIX_FLAKE_NAME="rust:${version}"
+
             PKGS=(rustc cargo rust-analyzer rustfmt)
             echo "Environment:"
             for pkg in "''${PKGS[@]}"; do
