@@ -51,10 +51,10 @@
           "beta"
         ];
 
-        ## Additional packages to install.
+        ## Additional cargo packages.
         ##
         #@ [Package]
-        extraPackages = with pkgs; [
+        cargoPackages = with pkgs; [
           cargo-flamegraph
           cargo-criterion
           cargo-show-asm
@@ -63,6 +63,19 @@
           cargo-hack
           cargo-fuzz
         ];
+
+        ## Additional system packages.
+        ##
+        #@ [Package]
+        systemPackages = with pkgs; [
+          pkg-config
+          openssl
+        ];
+
+        ## List of packages to install.
+        ##
+        #@ [Package]
+        packages = cargoPackages ++ systemPackages;
 
         ## Toolchains for each release channel.
         ##
@@ -78,7 +91,7 @@
         devShells = ext_lib.mkDevShells {
           default = "stable";
           variants = lib.mapAttrs (_: withExtensions) toolchains;
-          packages = [ (rust.selectLatestNightlyWith (toolchain: toolchain.rustfmt)) ] ++ extraPackages;
+          packages = [ (rust.selectLatestNightlyWith (toolchain: toolchain.rustfmt)) ] ++ packages;
           shellHook = version: ''
             export SHELL="${pkgs.bashInteractive}/bin/bash"
             export NIX_FLAKE_NAME="rust:${version}"
