@@ -63,7 +63,6 @@
           variants = runtimes;
           packages = extraPackages;
           shellHook = version: ''
-            export SHELL="${pkgs.bashInteractive}/bin/bash"
             export NIX_FLAKE_NAME="python:${version}"
 
             export UV_PYTHON="${runtimes.${version}}/bin/python"

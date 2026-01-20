@@ -52,7 +52,6 @@
           variants = agents;
           packages = extraPackages;
           shellHook = version: ''
-            export SHELL="${pkgs.bashInteractive}/bin/bash"
             export NIX_FLAKE_NAME="agent:${version}"
           '';
         };

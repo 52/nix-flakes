@@ -53,7 +53,6 @@
           variants = runtimes;
           packages = extraPackages;
           shellHook = version: ''
-            export SHELL="${pkgs.bashInteractive}/bin/bash"
             export NIX_FLAKE_NAME="node:${version}"
 
             PKGS=(node npm tsc)

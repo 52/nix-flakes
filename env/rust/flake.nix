@@ -93,7 +93,6 @@
           variants = lib.mapAttrs (_: withExtensions) toolchains;
           packages = [ (rust.selectLatestNightlyWith (toolchain: toolchain.rustfmt)) ] ++ packages;
           shellHook = version: ''
-            export SHELL="${pkgs.bashInteractive}/bin/bash"
             export NIX_FLAKE_NAME="rust:${version}"
 
             PKGS=(rustc cargo rust-analyzer rustfmt)
