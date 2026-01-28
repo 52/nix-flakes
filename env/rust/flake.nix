@@ -1,5 +1,5 @@
 {
-  description = "Development environment flake for rust";
+  description = "Development environment flake for Rust";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
@@ -42,15 +42,6 @@
           "clippy"
         ];
 
-        ## Available release channels.
-        ##
-        #@ [String]
-        defaultChannels = [
-          "stable"
-          "nightly"
-          "beta"
-        ];
-
         ## Additional cargo packages.
         ##
         #@ [Package]
@@ -69,7 +60,9 @@
         #@ [Package]
         systemPackages = with pkgs; [
           pkg-config
+          libclang
           openssl
+          cmake
         ];
 
         ## List of packages to install.
@@ -77,29 +70,49 @@
         #@ [Package]
         packages = cargoPackages ++ systemPackages;
 
-        ## Toolchains for each release channel.
+        ## Path to a local toolchain file.
         ##
-        #@ AttrSet
-        toolchains = lib.genAttrs defaultChannels (channel: rust.${channel}.latest.minimal);
+        #@ Path | null
+        toolchainFile = lib.findFirst builtins.pathExists null [
+          "${builtins.getEnv "PWD"}/rust-toolchain.toml"
+          "${builtins.getEnv "PWD"}/rust-toolchain"
+        ];
+
+        ## Available release channels.
+        ##
+        #@ [String]
+        variants = [
+          "stable"
+          "nightly"
+          "beta"
+        ]
+        ++ lib.optionals (toolchainFile != null) [
+          "file"
+        ];
 
         ## Apply extensions to a toolchain.
         ##
         #@ Derivation -> Derivation
         withExtensions = toolchain: toolchain.override { extensions = defaultExtensions; };
+
+        ## Build a toolchain from a variant name.
+        ##
+        #@ String -> Derivation
+        mkToolchain =
+          name:
+          if name == "file" then
+            rust.fromRustupToolchainFile toolchainFile
+          else
+            withExtensions rust.${name}.latest.minimal;
       in
       {
         devShells = ext_lib.mkDevShells {
           default = "stable";
-          variants = lib.mapAttrs (_: withExtensions) toolchains;
+          variants = lib.genAttrs variants mkToolchain;
           packages = [ (rust.selectLatestNightlyWith (toolchain: toolchain.rustfmt)) ] ++ packages;
-          shellHook = version: ''
-            export NIX_FLAKE_NAME="rust:${version}"
-
-            PKGS=(rustc cargo rust-analyzer rustfmt)
-            echo "Environment:"
-            for pkg in "''${PKGS[@]}"; do
-              printf "  %-12s →  %s\n" "$pkg" "$($pkg --version)"
-            done
+          shellHook = variant: ''
+            export NIX_FLAKE_NAME="''${NIX_FLAKE_NAME:+$NIX_FLAKE_NAME }rust:${variant}"
+            export LIBCLANG_PATH="${pkgs.libclang.lib}/lib"
           '';
         };
       }
