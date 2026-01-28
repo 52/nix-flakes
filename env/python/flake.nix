@@ -1,5 +1,5 @@
 {
-  description = "Development environment flake for python";
+  description = "Development environment flake for Python";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
@@ -62,21 +62,15 @@
           default = "312";
           variants = runtimes;
           packages = extraPackages;
-          shellHook = version: ''
-            export NIX_FLAKE_NAME="python:${version}"
-
-            export UV_PYTHON="${runtimes.${version}}/bin/python"
-            export UV_PYTHON_DOWNLOADS="never"
+          shellHook = variant: ''
+            export NIX_FLAKE_NAME="''${NIX_FLAKE_NAME:+$NIX_FLAKE_NAME }python:${variant}"
 
             ${lib.optionalString pkgs.stdenv.isLinux ''
               export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath libs}:$LD_LIBRARY_PATH"
             ''}
 
-            PKGS=(python uv ty ruff)
-            echo "Environment:"
-            for pkg in "''${PKGS[@]}"; do
-              printf "  %-12s →  %s\n" "$pkg" "$($pkg --version)"
-            done
+            export UV_PYTHON="${runtimes.${variant}}/bin/python"
+            export UV_PYTHON_DOWNLOADS="never"
           '';
         };
       }
