@@ -1,8 +1,8 @@
 {
-  description = "Development environment flake for AI agents";
+  description = "Development environment flake for Java";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -19,40 +19,43 @@
 
         pkgs = import nixpkgs {
           inherit system;
-          config.allowUnfree = true;
         };
 
         ext_lib = import ../../lib {
           inherit lib pkgs;
         };
 
-        ## Available AI Agents.
+        ## Available JDK versions.
         ##
         #@ [String]
-        defaultAgents = [
-          "opencode"
-          "claude-code"
+        defaultVersions = [
+          "8"
+          "17"
+          "21"
+          "25"
         ];
 
         ## Additional packages to install.
         ##
         #@ [Package]
         extraPackages = with pkgs; [
-          firejail
+          jdt-language-server
+          gradle
         ];
 
-        ## Package for each agent.
+        ## JDK package for each version.
         ##
         #@ AttrSet
-        agents = lib.genAttrs defaultAgents (agent: pkgs.${agent});
+        runtimes = lib.genAttrs defaultVersions (version: pkgs."jdk${version}");
       in
       {
         devShells = ext_lib.mkDevShells {
-          default = "opencode";
-          variants = agents;
+          default = "25";
+          variants = runtimes;
           packages = extraPackages;
-          shellHook = version: ''
-            export NIX_FLAKE_NAME="agent:${version}"
+          shellHook = variant: ''
+            export JAVA_HOME="${runtimes.${variant}}/lib/openjdk"
+            export NIX_FLAKE_NAME="''${NIX_FLAKE_NAME:+$NIX_FLAKE_NAME }java:${variant}"
           '';
         };
       }
