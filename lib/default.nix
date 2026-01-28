@@ -2,7 +2,40 @@
   lib,
   pkgs,
 }:
-{
+rec {
+  ## Create a development shell.
+  ##
+  ## ```nix
+  ## mkDevShell {
+  ##   name = "claude";
+  ##   packages = [ claude-sandboxed ];
+  ##   shellHook = name: "echo 'Hello from ${name}'";
+  ## }
+  ## ```
+  ##
+  #@ AttrSet -> Derivation
+  mkDevShell =
+    {
+      ## Name of the shell.
+      ##
+      #@ String
+      name,
+
+      ## List of packages to include.
+      ##
+      #@ [Package]
+      packages ? [ ],
+
+      ## Function to generate a shell hook.
+      ##
+      #@ String -> String
+      shellHook ? (_: ""),
+    }:
+    pkgs.mkShell {
+      inherit name packages;
+      shellHook = shellHook name;
+    };
+
   ## Create a set of shells for different variants.
   ##
   ## ```nix
@@ -22,7 +55,7 @@
       #@ String
       default,
 
-      ## Set of variants to gernerate shells for.
+      ## Set of variants to generate shells for.
       ## Each attribute maps a variant name to its package.
       ##
       #@ AttrSet
@@ -40,13 +73,15 @@
       shellHook ? (_: ""),
     }:
     let
-      ## Creates a development shell.
+      ## Creates a development shell for a variant.
       ##
       #@ String -> Package -> Derivation
-      mkShell = name: variant: pkgs.mkShell {
-        packages = [variant] ++ packages;
-        shellHook = shellHook name;
-      };
+      mkShell =
+        name: variant:
+        mkDevShell {
+          inherit name shellHook;
+          packages = [ variant ] ++ packages;
+        };
 
       ## Set of generated shells.
       ## This does not include the default alias.
