@@ -30,8 +30,9 @@
         ##
         #@ [String]
         defaultAgents = [
-          "opencode"
+          "codex"
           "claude-code"
+          "opencode"
         ];
 
         ## Additional packages to install.
