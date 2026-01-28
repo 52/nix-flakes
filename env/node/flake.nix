@@ -1,5 +1,5 @@
 {
-  description = "Development environment flake for node";
+  description = "Development environment flake for Node";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
@@ -52,14 +52,8 @@
           default = "24";
           variants = runtimes;
           packages = extraPackages;
-          shellHook = version: ''
-            export NIX_FLAKE_NAME="node:${version}"
-
-            PKGS=(node npm tsc)
-            echo "Environment:"
-            for pkg in "''${PKGS[@]}"; do
-              printf "  %-12s →  %s\n" "$pkg" "$($pkg --version)"
-            done
+          shellHook = variant: ''
+            export NIX_FLAKE_NAME="''${NIX_FLAKE_NAME:+$NIX_FLAKE_NAME }node:${variant}"
           '';
         };
       }
