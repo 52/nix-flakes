@@ -53,9 +53,27 @@
         ];
 
         ## Python package for each version.
+        ## This launches Python through the dynamic linker with the common libraries.
+        ## Avoids leaking `LD_LIBRARY_PATH` into the shell environment.
         ##
         #@ AttrSet
-        runtimes = lib.genAttrs defaultVersions (version: pkgs."python${version}");
+        runtimes = lib.genAttrs defaultVersions (
+          version:
+          let
+            python = pkgs."python${version}";
+          in
+          pkgs.symlinkJoin {
+            name = "python${version}";
+            paths = [ python ];
+            nativeBuildInputs = [ pkgs.makeWrapper ];
+            postBuild = lib.optionalString pkgs.stdenv.isLinux ''
+              rm $out/bin/${python.executable}
+              makeWrapper "$(< ${pkgs.stdenv.cc}/nix-support/dynamic-linker)" $out/bin/${python.executable} \
+                --add-flags "--library-path ${lib.makeLibraryPath libs}" \
+                --add-flags "--argv0 \"\$0\" ${python}/bin/${python.executable}"
+            '';
+          }
+        );
       in
       {
         devShells = ext_lib.mkDevShells {
@@ -64,11 +82,6 @@
           packages = extraPackages;
           shellHook = variant: ''
             export NIX_FLAKE_NAME="''${NIX_FLAKE_NAME:+$NIX_FLAKE_NAME }python:${variant}"
-
-            ${lib.optionalString pkgs.stdenv.isLinux ''
-              export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath libs}:$LD_LIBRARY_PATH"
-            ''}
-
             export UV_PYTHON="${runtimes.${variant}}/bin/python"
             export UV_PYTHON_DOWNLOADS="never"
           '';
